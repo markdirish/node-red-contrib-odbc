@@ -1,0 +1,32 @@
+{
+  "name": "node-red-contrib-odbc",
+  "version": "2.0.0-beta.0",
+  "description": "Node-RED node for making ODBC connections",
+  "keywords": [ "node-red", "odbc" ],
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "node-red": {
+    "nodes": {
+      "odbc": "odbc.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/markdirish/node-red-contrib-odbc.git"
+  },
+  "author": {
+    "name" : "Mark Irish",
+    "email" : "mirish@ibm.com",
+    "url" : "https://www.mark.irish.com"
+  },
+  "license": "Apache 2",
+  "bugs": {
+    "url": "https://github.com/markdirish/node-red-contrib-odbc/issues"
+  },
+  "homepage": "https://github.com/markdirish/node-red-contrib-odbc#readme",
+  "dependencies": {
+    "odbc": "^2.3.4"
+  }
+}

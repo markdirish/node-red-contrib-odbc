@@ -1,0 +1,220 @@
+<!-- 
+Copyright 2020 IBM
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License. 
+-->
+
+<script type="text/javascript">
+  RED.nodes.registerType('ODBC Pool',{
+    category: 'config',
+    defaults: {
+      connectionString: {value:"", required:true},
+      name: {value:""}
+    },
+    label: function() {
+      return this.name || 'ODBC Pool';
+    }
+  });
+</script>
+
+<script type="text/x-red" data-template-name="ODBC Pool">
+  <div class="form-row">
+    <label for="node-config-input-connectionString"><i class="icon-bookmark"></i>Connection String</label>
+    <input type="text" id="node-config-input-connectionString" placeholder="DSN=...;">
+  </div>
+
+  <div class="form-row">
+    <label for="node-config-input-initialsize"><i class="icon-bookmark"></i>Initial Size</label>
+    <input type="number" id="node-config-input-initialsize" placeholder="10">
+  </div>
+
+  <div class="form-row">
+    <label for="node-config-input-incrementsize"><i class="icon-bookmark"></i>Increment Size</label>
+    <input type="number" id="node-config-input-incrementsize" placeholder="10">
+  </div>
+
+  <div class="form-row">
+    <label for="node-config-input-maxsize"><i class="icon-bookmark"></i>Max Size</label>
+    <input type="number" id="node-config-input-maxsize" placeholder="">
+  </div>
+
+  <div class="form-row">
+    <label for="node-config-input-maxsize"><i class="icon-bookmark"></i>Shrink Pool</label>
+    <button type="button" class="red-ui-button">On</button>
+  </div>
+
+  <div class="form-row">
+    <label for="node-config-input-connectiontimeout"><i class="icon-bookmark"></i>Connection Timeout</label>
+    <input type="number" id="node-config-input-connectiontimeout" placeholder="10">
+  </div>
+
+  <div class="form-row">
+    <label for="node-config-input-logintimeout"><i class="icon-bookmark"></i>Login Timeout</label>
+    <input type="number" id="node-config-input-logintimeout" placeholder="10">
+  </div>
+</script>
+
+<script type="text/javascript">    
+  RED.nodes.registerType('ODBC query',{
+  category: 'storage',
+  color: '#78a9ff',
+  defaults: {
+      name: {value:""},
+      connection: {type:"ODBC Pool", required:true},
+      query: {value: ""},
+      parameters: {value: ""},
+      outField: {value:"payload"}
+  },
+  inputs:1,
+  outputs:1,
+  icon: "db.png",
+  label: function() {
+      return this.name||"odbc";
+  },
+  oneditprepare: function() {
+    this.editor = RED.editor.createEditor({
+      id: 'node-input-query-editor',
+      mode: 'ace/mode/text',
+      value: this.query
+    });
+  },
+  oneditsave: function() {
+    this.query = this.editor.getValue();
+    this.editor.destroy();
+    delete this.editor;
+  },
+  oneditcancel: function() {
+    this.editor.destroy();
+    delete this.editor;
+  }
+});
+</script>
+
+<script type="text/x-red" data-template-name="ODBC query">
+  <div class="form-row">
+    <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+    <input type="text" id="node-input-name">
+  </div>
+  <div class="form-row">
+      <label for="node-input-connection"><i class="fa fa-cog"></i> Connection</label>
+      <input type="text" id="node-input-connection">
+  </div>
+  <div class="form-row node-text-editor-row">
+    <label for="node-input-query" style="width: 100% !important;"><i class="fa fa-search"></i> Query</label>
+    <div style="height: 250px;" class="node-text-editor" id="node-input-query-editor" ></div>
+  </div>
+  <div class="form-row">
+    <label for="node-input-parameters"><i class="fa fa-ellipsis-h"></i> Parameters</label>
+    <input type="text" id="node-input-parameters">
+    <br>
+    <div class="form-tips">Tip: Parameters will look like a JavaScript array (e.g. ["Name", 123])</div>
+  </div>
+  <div class="form-row">
+      <label for="node-input-outField"><i class="fa fa-arrow-right"></i> Result to</label>
+      msg.<input type="text" id="node-input-outField" placeholder="payload" style="width: 64%;">
+  </div>
+</script>
+
+<script type="text/x-red" data-help-name="ODBC query">
+  <p>Node for running ODBC queries.</p>
+  <h3>Inputs</h3>
+    <dl class="message-properties">
+      <dt>payload
+        <span class="property-type">string | object</span>
+      </dt>
+      <dd>
+        <p>A valid JSON string or JavaScript object that can contain "query" and/or "parameter" properties. The query property must be a string (or undefined) and the parameter property must be a string (or undefined).</p>
+        <h4>Examples:</h4>
+        <p>JSON string: '{ "query": "SELECT * FROM TABLE WHERE A = ?", "parameters": [123] }'</p>
+        <p>JavaScript object: { query: "SELECT * FROM TABLE WHERE A = ?", parameter: [123] }</p>
+      </dd>
+    </dl>
+  <h3>Outputs</h3>
+      <dl class="message-properties">
+      <dt>payload
+        <span class="property-type">object</span>
+      </dt>
+      <dd>
+        An odbc result object (see the <a href=https://www.npmjs.com/package/odbc>odbc package docs</a>)
+      </dd>
+    </dl>
+   <h3>Details</h3>
+   <p>Some more information about the node.</p>
+   <p>A valid JSON string or JavaScript object that can contain "query" and/or "parameter" properties. The query property must be a string (or undefined) and the parameter property must be a string (or undefined).</p>
+  <h4>Examples:</h4>
+  <p>JSON string: '{ "query": "SELECT * FROM TABLE WHERE A = ?", "parameters": [123] }'</p>
+  <p>JavaScript object: { query: "SELECT * FROM TABLE WHERE A = ?", parameter: [123] }</p>
+</script>
+
+<!--ODBC procedure-->
+
+
+<script type="text/javascript">    
+    RED.nodes.registerType('ODBC procedure',{
+    category: 'storage',
+    color: '#78a9ff',
+    defaults: {
+        name: {value:""},
+        connection: {type:"ODBC Pool", required:true},
+        catalog: {value: ""},
+        schema: {value: ""},
+        procedure: {value: ""},
+        parameters: {value: ""},
+        outField: {value:"payload"}
+    },
+    inputs:1,
+    outputs:1,
+    icon: "db.png",
+    label: function() {
+        return this.name||"odbc";
+    }
+  });
+  </script>
+  
+  <script type="text/x-red" data-template-name="ODBC procedure">
+    <div class="form-row">
+      <label for="node-input-name"><i class="fa fa-tag"></i> Name</label>
+      <input type="text" id="node-input-name">
+    </div>
+    <div class="form-row">
+      <label for="node-input-connection"><i class="fa fa-cog"></i> Connection</label>
+      <input type="text" id="node-input-connection">
+    </div>
+    <div class="form-row">
+        <label for="node-input-catalog"><i class="fa fa-database"></i> Catalog</label>
+        <input type="text" id="node-input-catalog">
+    </div>
+    <div class="form-row">
+        <label for="node-input-schema"><i class="fa fa-database"></i> Schema</label>
+        <input type="text" id="node-input-schema">
+    </div>
+    <div class="form-row">
+        <label for="node-input-procedure"><i class="fa fa-database"></i> Procedure</label>
+        <input type="text" id="node-input-procedure">
+    </div>
+    <div class="form-row">
+        <label for="node-input-parameters"><i class="fa fa-ellipsis-h"></i> Parameters</label>
+        <input type="text" id="node-input-parameters">
+        <br>
+        <div class="form-tips">Tip: Parameters will look like a JavaScript array (e.g. ["Name", 123, undefined])</div>
+    </div>
+    <div class="form-row">
+        <label for="node-input-outField"><i class="fa fa-arrow-right"></i> Result to</label>
+        msg.<input type="text" id="node-input-outField" placeholder="payload" style="width: 64%;">
+    </div>
+  </script>
+  
+  <script type="text/x-red" data-help-name="ODBC procedure">
+    <p>Node for Node-RED to unixODBC and its supported drivers.</p>
+    <h4>Procedure</h4>
+  </script>
