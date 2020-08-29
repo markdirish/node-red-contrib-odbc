@@ -15,19 +15,19 @@ limitations under the License.
 -->
 
 <script type="text/javascript">
-  RED.nodes.registerType('ODBC Pool',{
+  RED.nodes.registerType('ODBC pool',{
     category: 'config',
     defaults: {
       connectionString: {value:"", required:true},
       name: {value:""}
     },
     label: function() {
-      return this.name || 'ODBC Pool';
+      return this.name || 'ODBC pool';
     }
   });
 </script>
 
-<script type="text/x-red" data-template-name="ODBC Pool">
+<script type="text/x-red" data-template-name="ODBC pool">
   <div class="form-row">
     <label for="node-config-input-connectionString"><i class="icon-bookmark"></i>Connection String</label>
     <input type="text" id="node-config-input-connectionString" placeholder="DSN=...;">
@@ -70,7 +70,7 @@ limitations under the License.
   color: '#78a9ff',
   defaults: {
       name: {value:""},
-      connection: {type:"ODBC Pool", required:true},
+      connection: {type:"ODBC pool", required:true},
       query: {value: ""},
       parameters: {value: ""},
       outField: {value:"payload"}
@@ -133,10 +133,7 @@ limitations under the License.
         <span class="property-type">string | object</span>
       </dt>
       <dd>
-        <p>A valid JSON string or JavaScript object that can contain "query" and/or "parameter" properties. The query property must be a string (or undefined) and the parameter property must be a string (or undefined).</p>
-        <h4>Examples:</h4>
-        <p>JSON string: '{ "query": "SELECT * FROM TABLE WHERE A = ?", "parameters": [123] }'</p>
-        <p>JavaScript object: { query: "SELECT * FROM TABLE WHERE A = ?", parameter: [123] }</p>
+        <p>A valid JSON string or JavaScript object that can contain "query" and/or "parameter" properties.
       </dd>
     </dl>
   <h3>Outputs</h3>
@@ -149,11 +146,6 @@ limitations under the License.
       </dd>
     </dl>
    <h3>Details</h3>
-   <p>Some more information about the node.</p>
-   <p>A valid JSON string or JavaScript object that can contain "query" and/or "parameter" properties. The query property must be a string (or undefined) and the parameter property must be a string (or undefined).</p>
-  <h4>Examples:</h4>
-  <p>JSON string: '{ "query": "SELECT * FROM TABLE WHERE A = ?", "parameters": [123] }'</p>
-  <p>JavaScript object: { query: "SELECT * FROM TABLE WHERE A = ?", parameter: [123] }</p>
 </script>
 
 <!--ODBC procedure-->
@@ -165,7 +157,7 @@ limitations under the License.
     color: '#78a9ff',
     defaults: {
         name: {value:""},
-        connection: {type:"ODBC Pool", required:true},
+        connection: {type:"ODBC pool", required:true},
         catalog: {value: ""},
         schema: {value: ""},
         procedure: {value: ""},
@@ -215,6 +207,24 @@ limitations under the License.
   </script>
   
   <script type="text/x-red" data-help-name="ODBC procedure">
-    <p>Node for Node-RED to unixODBC and its supported drivers.</p>
-    <h4>Procedure</h4>
+    <p>Node for calling ODBC procedures.</p>
+    <h3>Inputs</h3>
+      <dl class="message-properties">
+        <dt>payload
+          <span class="property-type">string | object</span>
+        </dt>
+        <dd>
+          <p>A valid JSON string or JavaScript object that can contain "catalog", "schema", "procedure" and/or "parameters" properties.</p>
+        </dd>
+      </dl>
+    <h3>Outputs</h3>
+        <dl class="message-properties">
+        <dt>payload
+          <span class="property-type">object</span>
+        </dt>
+        <dd>
+          An odbc result object (see the <a href=https://www.npmjs.com/package/odbc>odbc package docs</a>)
+        </dd>
+      </dl>
+    <h3>Details</h3>
   </script>

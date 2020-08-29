@@ -14,6 +14,7 @@
 
 module.exports = function(RED) {
   const odbc = require('odbc');
+  const process = require('process');
 
   function odbcPool(config) {
     RED.nodes.createNode(this, config);
@@ -23,6 +24,7 @@ module.exports = function(RED) {
     // odbc.pool will set them to the defaults during its execution.
     this.poolConfig = config;
     this.pool = null;
+    this.connecting = false;
 
     this.connect = async () => {
 
@@ -31,6 +33,7 @@ module.exports = function(RED) {
       if (this.pool == null) {
         try {
           this.pool = await odbc.pool(this.poolConfig);
+          this.connecting = false;
         } catch (error) {
           throw(error);
         }
@@ -46,16 +49,18 @@ module.exports = function(RED) {
     }
   }
   
-  RED.nodes.registerType('ODBC Pool', odbcPool);
+  RED.nodes.registerType('ODBC pool', odbcPool);
 
   function odbcQuery(config) {
     RED.nodes.createNode(this, config);
     this.poolNode = RED.nodes.getNode(config.connection);
     this.queryString = config.query;
     this.outfield = config.outField;
-    
-    this.on('input', async (message, send, done) => {
+    this.name = config.name;
+
+    this.runQuery = async function(message, send, done) {
       let connection;
+
       try {
         connection = await this.poolNode.connect();
       } catch (error) {
@@ -142,8 +147,26 @@ module.exports = function(RED) {
       if (done) {
         done();
       }
-    });
+    }
 
+    this.checkPool = async function(message, send, done) {
+      if (this.poolNode.connecting) {
+        setTimeout(() => {
+          this.checkPool(message, send, done);
+        }, 1000);
+        return;
+      }
+
+      // On initialization, pool will be null. Set connecting to true so that
+      // other nodes are immediately blocked, then call runQuery (which will
+      // actually do the pool initialization)
+      if (this.poolNode.pool == null) {
+        this.poolNode.connecting = true;
+      }
+      await this.runQuery(message, send, done);
+    }
+    
+    this.on('input', this.checkPool);
         
     this.status({fill:'green',shape:'dot',text:'ready'});
   }
@@ -181,9 +204,8 @@ module.exports = function(RED) {
     if (!this.schema) {
       this.schema = null;
     }
-    
-    this.on('input', async (message, send, done) => {
 
+    this.runProcedure = async function(message, send, done) {
       let connection;
       let catalog = this.catalog;
       let schema = this.schema;
@@ -260,9 +282,8 @@ module.exports = function(RED) {
       try {
         result = await connection.callProcedure(catalog, schema, procedure, parameters);
       } catch (error) {
-        console.log(error.odbcErrors);
         this.error(error);
-        this.status({fill: "red", shape: "ring", text: error.odbcErrors});
+        this.status({fill: "red", shape: "ring", text: error.odbcErrors[0].message});
         connection.close();
         if (done) {
           // Node-RED 1.0 compatible
@@ -282,10 +303,26 @@ module.exports = function(RED) {
       if (done) {
         done();
       }
-    });
+    }
 
-        
-    this.status({fill:'green',shape:'dot',text:'ready'});
+    this.checkPool = async function(message, send, done) {
+      if (this.poolNode.connecting) {
+        setTimeout(() => {
+          this.checkPool(message, send, done);
+        }, 1000);
+        return;
+      }
+
+      // On initialization, pool will be null. Set connecting to true so that
+      // other nodes are immediately blocked, then call runProcedure (which will
+      // actually do the pool initialization)
+      if (this.poolNode.pool == null) {
+        this.poolNode.connecting = true;
+      }
+      await this.runProcedure(message, send, done);
+    }
+    
+    this.on('input', this.runProcedure);
   }
 
   RED.nodes.registerType("ODBC procedure", odbcProcedure);
